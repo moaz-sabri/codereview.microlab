@@ -19,7 +19,7 @@ class ReminderCalendarController extends Utilitie
      * @param Object $request The request object containing additional parameters.
      * @return Response The response containing the list of reminders.
      */
-    function index(object $request): Response
+    function index(object $request)
     {
         $this->hasAuth();
 

@@ -35,15 +35,15 @@ define('STORAGE', realpath(dirname(__DIR__)) . DS . '..' . DS . 'storage' . DS);
 define('ROOT', WEBROOT . DS . '..' . DS . 'public' . DS);
 
 // Secret Key
-define('SECRET_KEY', '-'); // Replace 'your_secret_key_here' with your actual secret key
+define('SECRET_KEY', 'default'); // Replace 'your_secret_key_here' with your actual secret key
 // license
-define('LICENSE', '-'); // Replace 'your_license_variable_name' with your actual license variable name
+define('LICENSE', 'default'); // Replace 'your_license_variable_name' with your actual license variable name
 
 // Generate a nonce value for this page load
 define('NONCE', base64_encode(random_int(PHP_INT_MIN, PHP_INT_MAX)));
 
 // Generate a key to unittest 
-define('UNITTESTKEY', '-'); // Replace 'your_unittest_key_variable_name' with your actual unittest key variable name
+define('UNITTESTKEY', 'default'); // Replace 'your_unittest_key_variable_name' with your actual unittest key variable name
 
 // glouble Setting
 // Set default timezone to Europe/Vienna
