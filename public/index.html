@@ -1,0 +1,29 @@
+<?php
+// TODO mroe code to js,css
+function minifyHTML($html)
+{
+
+    $hash = substr(md5(uniqid()), 0, 6); // Generate a 6-character hash
+
+    $search = [
+    '/<!--(.|\s)*?-->/', // Comments
+    '/\>[^\S ]+/s',  // strip whitespaces after tags
+    '/[^\S ]+\</s',  // strip whitespaces before tags
+    '/(\s)+/s' ,      // shorten multiple whitespace sequences
+    '/<div(.*?)>/'       // shorten multiple whitespace sequences
+    ];
+    
+    $replace = ['', '>', '<', '\\1', '<div$1 jd="' . $hash . '">'];
+    
+    $minified = preg_replace($search, $replace, $html);
+     
+    return true ? $html : $minified;
+    
+}
+
+ob_start(); // Start output buffering
+require_once '../app/autoload.inc';
+die(minifyHTML(ob_get_clean()));
+ob_end_flush();
+ob_clean();
+

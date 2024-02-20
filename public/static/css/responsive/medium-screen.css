@@ -1,0 +1,10 @@
+.auth-background-col {
+  display: none;
+}
+.app-auth-wrapper .app-auth-body {
+  width: 100%;
+}
+
+.app-notifications-dropdown .dropdown-menu {
+  width: 400px;
+}

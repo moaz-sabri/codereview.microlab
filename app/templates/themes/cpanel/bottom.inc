@@ -1,0 +1,8 @@
+</div><!--//container-fluid-->
+</div><!--//app-content-->
+</div><!--//app-wrapper-->
+<footer class="app-footer">
+    <div class="container text-center py-3">
+        <!-- CONTENT  -->
+    </div>
+</footer>

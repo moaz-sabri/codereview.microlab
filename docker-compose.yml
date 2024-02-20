@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  # PHP Service
+  php:
+    image: php:8.2-apache
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8090:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      # PHP connects to MySQL using these environment variables
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: joudev
+      MYSQL_PORT: 8091
+      SERVER_PORT: 8090 # Set the port number you want to access
+    depends_on:
+      - mysql
+
+  # MySQL Service
+  mysql:
+    image: mysql:5.7
+    environment:
+      # MySQL root user credentials and the default database
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: joudev
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+
+  # phpMyAdmin Service
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8091:80"
+    environment:
+      # phpMyAdmin connects to the MySQL service
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: root
+      
+    depends_on:
+      - mysql
+
+volumes:
+  # Create a named volume to persist MySQL data
+  mysql-data:

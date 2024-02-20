@@ -1,0 +1,45 @@
+.search-mobile-trigger {
+  cursor: pointer;
+  -webkit-opacity: 0.8;
+  -moz-opacity: 0.8;
+  opacity: 0.8;
+}
+.search-mobile-trigger:hover {
+  color: #2d9b83;
+  -webkit-opacity: 1;
+  -moz-opacity: 1;
+  opacity: 1;
+}
+.app-search-box {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 56px;
+  padding: 0;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  transition: all 0.4s ease-in-out;
+}
+
+.app-search-box {
+  transition: none;
+}
+
+.app-search-box .app-search-form .search-input {
+  border-radius: 0;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+.app-search-box .app-search-form .search-btn {
+  top: 7px;
+}
+.app-search-box.is-visible {
+  display: block;
+}
+
+.app-card-stat .stats-figure {
+  font-size: 1.125rem;
+}
+.app-card-stat .stats-type {
+  font-size: 0.75rem;
+}

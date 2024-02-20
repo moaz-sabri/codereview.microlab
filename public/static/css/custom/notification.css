@@ -1,0 +1,30 @@
+.app-card-notification .profile-image {
+  width: 60px;
+  height: 60px;
+}
+
+.app-card-notification .notification-title {
+  font-size: 1.125rem;
+}
+
+.app-card-notification .notification-content {
+  font-size: 0.875rem;
+}
+
+.app-card-notification .notification-meta {
+  font-size: 0.75rem;
+  color: #828d9f;
+}
+
+.app-card-notification .action-link {
+  font-size: 0.875rem;
+}
+
+.app-card-notification .app-card-footer {
+  background: #fafbff;
+}
+
+.app-card-notification .notification-type .badge {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+}

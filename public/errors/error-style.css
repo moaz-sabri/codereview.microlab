@@ -1,0 +1,95 @@
+body {
+  background-color: #eee;
+  line-height: 2rem;
+  color: #333;
+  font-size: 100%;
+}
+
+p {
+  font-size: 1.5em;
+  text-align: center;
+  font-weight: 400;
+}
+
+.quotething {
+  font-size: 1em;
+
+  text-align: center;
+  font-weight: 300;
+}
+
+h1 {
+  text-align: center;
+  font-size: 4em;
+  font-weight: 800;
+  text-shadow: #eee2cc 1px 1px, #eee2cc 2px 2px, #eee2cc 3px 3px,
+    #eee2cd 4px 4px, #eee2cd 5px 5px, #eee2cd 6px 6px, #eee2cd 7px 7px,
+    #eee2ce 8px 8px, #eee3ce 9px 9px, #eee3ce 10px 10px, #eee3ce 11px 11px,
+    #eee3cf 12px 12px, #eee3cf 13px 13px, #eee3cf 14px 14px, #eee3cf 15px 15px,
+    #eee3d0 16px 16px, #eee4d0 17px 17px, #eee4d0 18px 18px, #eee4d0 19px 19px,
+    #eee4d1 20px 20px, #eee4d1 21px 21px, #eee4d1 22px 22px, #eee4d1 23px 23px,
+    #eee4d2 24px 24px, #eee5d2 25px 25px, #eee5d2 26px 26px, #eee5d2 27px 27px,
+    #eee5d3 28px 28px, #eee5d3 29px 29px, #eee5d3 30px 30px, #eee5d3 31px 31px,
+    #eee5d4 32px 32px, #eee5d4 33px 33px, #eee6d4 34px 34px, #eee6d4 35px 35px,
+    #eee6d5 36px 36px, #eee6d5 37px 37px, #eee6d5 38px 38px, #eee6d5 39px 39px,
+    #eee6d6 40px 40px, #eee6d6 41px 41px, #eee7d6 42px 42px, #eee7d6 43px 43px,
+    #eee7d7 44px 44px, #eee7d7 45px 45px, #eee7d7 46px 46px, #eee7d7 47px 47px,
+    #eee7d8 48px 48px, #eee7d8 49px 49px, #eee8d8 50px 50px, #eee8d9 51px 51px,
+    #eee8d9 52px 52px, #eee8d9 53px 53px, #eee8d9 54px 54px, #eee8da 55px 55px,
+    #eee8da 56px 56px, #eee8da 57px 57px, #eee8da 58px 58px, #eee9db 59px 59px,
+    #eee9db 60px 60px, #eee9db 61px 61px, #eee9db 62px 62px, #eee9dc 63px 63px,
+    #eee9dc 64px 64px, #eee9dc 65px 65px, #eee9dc 66px 66px, #eeeadd 67px 67px,
+    #eeeadd 68px 68px, #eeeadd 69px 69px, #eeeadd 70px 70px, #eeeade 71px 71px,
+    #eeeade 72px 72px, #eeeade 73px 73px, #eeeade 74px 74px, #eeebdf 75px 75px,
+    #eeebdf 76px 76px, #eeebdf 77px 77px, #eeebdf 78px 78px, #eeebe0 79px 79px,
+    #eeebe0 80px 80px, #eeebe0 81px 81px, #eeebe0 82px 82px, #eeebe1 83px 83px,
+    #eeece1 84px 84px, #eeece1 85px 85px, #eeece1 86px 86px, #eeece2 87px 87px,
+    #eeece2 88px 88px, #eeece2 89px 89px, #eeece2 90px 90px, #eeece3 91px 91px,
+    #eeede3 92px 92px, #eeede3 93px 93px, #eeede3 94px 94px, #eeede4 95px 95px,
+    #eeede4 96px 96px, #eeede4 97px 97px, #eeede4 98px 98px, #eeede5 99px 99px,
+    #eeeee5 100px 100px, #eeeee5 101px 101px, #eeeee6 102px 102px,
+    #eeeee6 103px 103px, #eeeee6 104px 104px, #eeeee6 105px 105px,
+    #eeeee7 106px 106px, #eeeee7 107px 107px, #eeeee7 108px 108px,
+    #eeefe7 109px 109px, #eeefe8 110px 110px, #eeefe8 111px 111px,
+    #eeefe8 112px 112px, #eeefe8 113px 113px, #eeefe9 114px 114px,
+    #eeefe9 115px 115px, #eeefe9 116px 116px;
+}
+
+.button404 {
+  text-align: center;
+  display: inline-block;
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  cursor: pointer;
+  margin: 1px;
+  padding: 12px 30px;
+  border: 1px solid #fff;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+  font: normal 13px / normal "Roboto", Times, serif;
+  color: #fff;
+  -o-text-overflow: clip;
+  text-overflow: clip;
+  background: #333;
+  -webkit-transition: all 300ms cubic-bezier(0.42, 0, 0.58, 1);
+  -moz-transition: all 300ms cubic-bezier(0.42, 0, 0.58, 1);
+  -o-transition: all 300ms cubic-bezier(0.42, 0, 0.58, 1);
+  transition: all 300ms cubic-bezier(0.42, 0, 0.58, 1);
+}
+
+.button404:hover {
+  color: #333;
+  background: #fff;
+  border: 1px solid #333;
+}
+
+.container {
+  display: grid;
+  justify-content: center;
+  margin: 0 auto;
+  min-height: 100vh;
+  max-width: 600px;
+  align-items: center;
+  align-content: center;
+}

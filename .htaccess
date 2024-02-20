@@ -1,0 +1,103 @@
+RewriteEngine On
+
+Options -Indexes
+
+
+RewriteCond %{HTTP_HOST} ^https://joude.com[nc]
+RewriteRule ^(.*)$ http://www.https://joude.com/$1 [r=301,nc]
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+
+RewriteCond %{HTTP:Authorization} .+
+RewriteRule ^ - [E=HTTP_AUTHORIZATION:%0]
+
+# Allow access to the app folder only from localhost or specific IP address
+RewriteRule ^app(/includes/.*)?$ - [F]
+RewriteRule ^app(/config/.*)?$ - [F]
+RewriteRule ^app(/modules/.*)?$ - [F]
+
+# 301 Redirect Old File
+Redirect 301 index.php /public/index.html
+
+# Redirect 'storage/uploads' to the actual folder
+RewriteRule ^storage/uploads/(.*)$ storage/uploads/$1 [L,NC]
+
+# Redirect requests to the public folder
+RewriteRule ^((?!public/).*)$ public/index.html/$1 [L,NC]
+
+
+<Files "*.php">
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+<FilesMatch "\.html$">
+SetHandler application/x-httpd-php
+  # Header set Service-Worker-Allowed "public/"
+</FilesMatch>
+
+<FilesMatch "\.(py|cs|rb|pl|cgi|sh|bash|php)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "\.(html|htm|css|js|png|jpg|jpeg|gif|svg|pdf|doc|json|xml)$">
+    Order deny,allow
+    Allow from all
+</FilesMatch>
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript application/json application/xml
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^sitemap\.xml$ /sitemap.xml [L]
+</IfModule>
+
+<Files "robots.txt">
+  Allow from all
+</Files>
+  
+
+# # Caching schema
+# <FilesMatch "\.(html|htm|css|js|png|jpg|jpeg|gif|svg|pdf|doc|json|xml)$">
+#   Header set Cache-Control "public, proxy-revalidate, max-age=7200"
+# </FilesMatch>
+
+# <FilesMatch "\public\pwa.js$">
+#     # Header set Service-Worker-Allowed "public/"
+# </FilesMatch>
+
+<Files "robots.txt">
+  Allow from all
+</Files>
+
+<Files "sitemap.xml">
+  Allow from all
+</Files>
+
+<Files "favicon.ico">
+  Allow from all
+</Files>
+
+
+# 400 Bad Request
+ErrorDocument 400 /public/errors/bad-request.html
+
+# 401 Unauthorized
+ErrorDocument 401 /public/errors/unauthorized.html
+
+# 403 Forbidden
+ErrorDocument 403 /public/errors/forbidden.html
+
+# 404 Not Found
+ErrorDocument 404 /public/errors/not-found.html
+
+# 500 Internal Server Error
+ErrorDocument 500 /public/errors/internal-server-error.html
+
+# 503 Service Unavailable
+ErrorDocument 503 /public/errors/service-unavailable.html
+
