@@ -2,11 +2,8 @@
 
 namespace App\Database;
 
-use App\Modules\Permissions\Loader\CryptLoader;
-use App\Modules\Records\Loader\RecordLoader;
+use App\Extends\Record\RecordLoader;
 use PDOException;
-
-use App\Utilities\Utilitie;
 use PDO;
 
 /**
@@ -21,7 +18,10 @@ class Database
     use Model;
     use Process;
 
-    private array  $emtyObject = [];
+    public array  $emtyObject = [
+        "result" => [],
+        "info" => false
+    ];
 
     /**
      * Save Data
@@ -33,26 +33,29 @@ class Database
      */
     public function save(): object|bool
     {
-        $this->column->updated_at = date(DB_FORMAT . ' h:s');
+        $_updated_at = $this->base . '_updated_at';
+        $this->column->$_updated_at = date(DB_FORMAT . ' h:s');
         $response = $this->column;
 
         if (is_null($this->conditions)) :
 
             $uid = $this->create();
             if ($uid) :
-                $response->uid = $uid;
-                RecordLoader::history("New {$this->tableName} created successfully.{$response->guide}.", 1);
+                $_uid = $this->base . '_uid';
+                $_guide = $this->base . '_guide';
+                $response->$_uid = $uid;
+                RecordLoader::activity("New {$this->tableName} created successfully.{$response->$_guide}.", 1);
                 return $response;
             endif;
         else :
 
             if ($this->update()) :
-                RecordLoader::history("Updated {$this->tableName} successfully.  {$this->conditions[0][2]}.", 1);
+                RecordLoader::activity("Updated {$this->tableName} successfully.  {$this->conditions[0][2]}.", 1);
                 return $response;
             endif;
         endif;
 
-        RecordLoader::history("An error occurred the {$this->tableName}. Please review the data provided and try again.", 0);
+        RecordLoader::activity("An error occurred the {$this->tableName}. Please review the data provided and try again.", 0);
         return false;
     }
 
@@ -71,7 +74,7 @@ class Database
             $columns = "";
             $values = "";
             foreach ($this->column as $key => $column) :
-                if (empty($column)) continue;
+                if ($column === false) continue;
                 $columns .= "`$key`, ";
                 $values .= ":$key, ";
             endforeach;
@@ -81,10 +84,12 @@ class Database
 
             $sql = "INSERT INTO `{$this->tableName}` ($columns) VALUES ($values)";
 
+            $this->sqlQuery = $sql;
+
             $stmt = $db->prepare($sql);
 
             foreach ($this->column as $key => $value) {
-                if (empty($value)) continue;
+                if ($value === false) continue;
                 $stmt->bindValue(":$key", $value);
             }
 
@@ -92,7 +97,7 @@ class Database
                 return $db->lastInsertId(); // Return the ID of the inserted record
             endif;
         } catch (PDOException $e) {
-            RecordLoader::history("Apologies, but we're currently experiencing technical difficulties on our server while creating the item. Our team has been notified, and we're working to resolve this issue. Please try again later.", 0);
+            RecordLoader::activity("Apologies, but we're currently experiencing technical difficulties on our server while creating the item. Our team has been notified, and we're working to resolve this issue. Please try again later.", 0);
             RecordLoader::log("Error: " . $e->getMessage(), 500, "BSrxZSqdFh6ry1");
         }
 
@@ -110,15 +115,15 @@ class Database
     {
         // unset($this->column->uid);
         // unset($this->column->guide);
-        unset($this->column->created_at);
-        unset($this->column->deleted_at);
+        // unset($this->column->created_at);
+        // unset($this->column->deleted_at);
 
         $db = DatabaseHandler::connect();
 
         try {
             $setClause = "";
             foreach ($this->column as $key => $value) {
-                if (empty($value)) continue;
+                if ($value === false) continue;
                 $setClause .= "`$key` = :$key, ";
             }
             $setClause = rtrim($setClause, ", "); // Remove trailing comma
@@ -130,10 +135,12 @@ class Database
                 $sql .= $this->conditionsString;
             endif;
 
+            $this->sqlQuery = $sql;
+
             $stmt = $db->prepare($sql);
 
             foreach ($this->column as $key => $value) {
-                if (empty($value)) continue;
+                if ($value === false) continue;
                 $stmt->bindValue(":$key", $value);
             }
 
@@ -145,7 +152,7 @@ class Database
                 return true;
             endif;
         } catch (PDOException $e) {
-            RecordLoader::history("Oops, we've encountered a server error while updating the item. Our team has been alerted and is actively addressing the issue. Please try your update again later.", 0);
+            RecordLoader::activity("Oops, we've encountered a server error while updating the item. Our team has been alerted and is actively addressing the issue. Please try your update again later.", 0);
             RecordLoader::log("Error: " . $e->getMessage(), 500, "FTgWffZOchTgZp");
         }
         return false;
@@ -170,7 +177,7 @@ class Database
                 $this->column = $response;
                 return $response;
             else :
-                RecordLoader::history("We're sorry, but we're currently facing difficulties accessing the requested item from the server. Our team is aware of the issue and is actively working on a solution. Please try again later.", 0);
+                RecordLoader::activity("We're sorry, but we're currently facing difficulties accessing the requested item from the server. Our team is aware of the issue and is actively working on a solution. Please try again later.", 0);
                 RecordLoader::log("Query preparation failed: " . json_encode($response), 500, "GVmxj2MZtQP7T7");
             endif;
         endif;
@@ -199,7 +206,7 @@ class Database
                 // Create and return an object with response data
                 return $this->getResponse($response);
             else :
-                RecordLoader::history("We apologize, but there is an issue with accessing the requested items from the server. Our team is aware of the problem and is actively working on a resolution. Please try accessing the items again later.", 0);
+                RecordLoader::activity("We apologize, but there is an issue with accessing the requested items from the server. Our team is aware of the problem and is actively working on a resolution. Please try accessing the items again later.", 0);
                 RecordLoader::log("Query preparation failed: " . json_encode($result), 500, "jjrUbFpPCKOmxg");
                 return (object) $this->emtyObject;
             endif;
@@ -230,7 +237,7 @@ class Database
             if ($response) :
                 return $response;
             else :
-                RecordLoader::history("Oops, we've encountered a server error while updating the item. Our team has been alerted and is actively addressing the issue. Please try your update again later.", 0);
+                RecordLoader::activity("Oops, we've encountered a server error while updating the item. Our team has been alerted and is actively addressing the issue. Please try your update again later.", 0);
                 RecordLoader::log("Query preparation failed: " . json_encode($response), 500, "4zDbqYzFKbkDte");
             endif;
         endif;
@@ -261,7 +268,7 @@ class Database
             if ($response) :
                 return $this->getResponse($response);
             else :
-                RecordLoader::history("We're sorry, but we're currently facing difficulties accessing the requested item from the server. Our team is aware of the issue and is actively working on a solution. Please try again later.", 0);
+                RecordLoader::activity("We're sorry, but we're currently facing difficulties accessing the requested item from the server. Our team is aware of the issue and is actively working on a solution. Please try again later.", 0);
                 RecordLoader::log("Query preparation failed: " . json_encode($result), 500, "TU87eFBZEvjJkO");
                 return (object) $this->emtyObject;
             endif;
@@ -284,7 +291,7 @@ class Database
 
         $sql .= $this->generateJoin();
 
-        $result = $this->query($sql, " GROUP BY `{$this->tableName}`.`uid` ");
+        $result = $this->query($sql, " GROUP BY `{$this->tableName}`.`{$this->base}_uid` ");
 
         if ($result) :
             $response = $result->fetch(PDO::FETCH_OBJ);
@@ -292,7 +299,7 @@ class Database
             if ($response) :
                 return $response;
             else :
-                RecordLoader::history("Oops, we've encountered a server error while updating the item. Our team has been alerted and is actively addressing the issue. Please try your update again later.", 0);
+                RecordLoader::activity("Oops, we've encountered a server error while updating the item. Our team has been alerted and is actively addressing the issue. Please try your update again later.", 0);
                 RecordLoader::log("Query preparation failed: " . json_encode($response), 500, "RDCxSrsHgR1QNh");
             endif;
         endif;
@@ -314,7 +321,7 @@ class Database
 
         $sql .= $this->generateJoin();
 
-        $result = $this->query($sql, " GROUP BY `{$this->tableName}`.`uid` ");
+        $result = $this->query($sql, " GROUP BY `{$this->tableName}`.`{$this->base}_uid` ");
 
         if ($result) :
 
@@ -325,7 +332,7 @@ class Database
                 // Create and return an object with response data
                 return $this->getResponse($response);
             else :
-                RecordLoader::history("We're sorry, but we're currently facing difficulties accessing the requested item from the server. Our team is aware of the issue and is actively working on a solution. Please try again later.", 0);
+                RecordLoader::activity("We're sorry, but we're currently facing difficulties accessing the requested item from the server. Our team is aware of the issue and is actively working on a solution. Please try again later.", 0);
                 RecordLoader::log("Query preparation failed: " . json_encode($result), 500, "1P6GlZZvGeJlIl");
                 return (object) $this->emtyObject;
             endif;
@@ -349,15 +356,17 @@ class Database
 
         try {
             if ($need) :
-                $sql = "UPDATE `{$this->tableName}` SET `deleted_at` = null";
+                $sql = "UPDATE `{$this->tableName}` SET `{$this->base}_deleted_at` = null";
             else :
-                $sql = "UPDATE `{$this->tableName}` SET `deleted_at` = NOW()";
+                $sql = "UPDATE `{$this->tableName}` SET `{$this->base}_deleted_at` = NOW()";
             endif;
 
             if (isset($this->conditions) && count($this->conditions) > 0) :
                 $this->conditionsString = $this->getConditions();
                 $sql .= $this->conditionsString;
             endif;
+
+            $this->sqlQuery = $sql;
 
             $stmt = $db->prepare($sql);
 
@@ -367,7 +376,7 @@ class Database
 
             return $stmt->execute(); // Return true on success, false on failure
         } catch (PDOException $e) {
-            RecordLoader::history("We regret to inform you that we're currently experiencing a technical issue while trying to delete the item. Our team is already investigating the problem and is actively working to resolve it. Please try the deletion process again later.", 0);
+            RecordLoader::activity("We regret to inform you that we're currently experiencing a technical issue while trying to delete the item. Our team is already investigating the problem and is actively working to resolve it. Please try the deletion process again later.", 0);
             RecordLoader::log("Error: " . $e->getMessage(), 500, "wnSYckBjudSsNh");
         }
 
@@ -396,6 +405,8 @@ class Database
                 $sql .= $this->conditionsString;
             endif;
 
+            $this->sqlQuery = $sql;
+
             $stmt = $db->prepare($sql);
 
             if (isset($this->conditions) && count($this->conditions) > 0) :
@@ -404,7 +415,7 @@ class Database
 
             return $stmt->execute(); // Return true on success, false on failure
         } catch (PDOException $e) {
-            RecordLoader::history("We regret to inform you that we're currently experiencing a technical issue while trying to delete the item. Our team is already investigating the problem and is actively working to resolve it. Please try the deletion process again later.", 0);
+            RecordLoader::activity("We regret to inform you that we're currently experiencing a technical issue while trying to delete the item. Our team is already investigating the problem and is actively working to resolve it. Please try the deletion process again later.", 0);
             RecordLoader::log("Error: " . $e->getMessage(), 500, "PTtkYxmbkn8FsJ");
         }
 
@@ -463,12 +474,12 @@ class Database
                 return $this->getResponse($response);
 
             else :
-                RecordLoader::history("We apologize, but there is an issue with accessing the requested items from the server. Our team is aware of the problem and is actively working on a resolution. Please try accessing the items again later.", 0);
+                RecordLoader::activity("We apologize, but there is an issue with accessing the requested items from the server. Our team is aware of the problem and is actively working on a resolution. Please try accessing the items again later.", 0);
                 RecordLoader::log("Query preparation failed: " . json_encode($stmt), 500, "jjrUbFpPCKOmxg");
                 return (object) $this->emtyObject;
             endif;
         } catch (PDOException $e) {
-            RecordLoader::history("We regret to inform you that we're currently experiencing a technical issue while trying to delete the item. Our team is already investigating the problem and is actively working to resolve it. Please try the deletion process again later.", 0);
+            RecordLoader::activity("We regret to inform you that we're currently experiencing a technical issue while trying to delete the item. Our team is already investigating the problem and is actively working to resolve it. Please try the deletion process again later.", 0);
             RecordLoader::log("Error: " . $e->getMessage(), 500, "PTtkYxmbkn8FsJ");
         }
 

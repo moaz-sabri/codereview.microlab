@@ -42,13 +42,13 @@ SetHandler application/x-httpd-php
     Deny from all
 </FilesMatch>
 
-<FilesMatch "\.(html|htm|css|js|png|jpg|jpeg|gif|svg|pdf|doc|json|xml)$">
+<FilesMatch "\.(html|htm|css|js|png|jpg|jpeg|gif|webp|svg|pdf|doc|json|xml|ico)$">
     Order deny,allow
     Allow from all
 </FilesMatch>
 
 <IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript application/json application/xml
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript multipart/form-data application/xml
 </IfModule>
 
 <IfModule mod_rewrite.c>
@@ -81,6 +81,11 @@ SetHandler application/x-httpd-php
 <Files "favicon.ico">
   Allow from all
 </Files>
+# Serve favicon.ico
+<Files "/public/favicon.ico">
+    ErrorDocument 404 /public/favicon.ico
+</Files>
+
 
 
 # 400 Bad Request

@@ -10,7 +10,7 @@
   -moz-opacity: 1;
   opacity: 1;
 }
-.app-search-box {
+.search-box {
   display: none;
   position: absolute;
   left: 0;
@@ -21,25 +21,25 @@
   transition: all 0.4s ease-in-out;
 }
 
-.app-search-box {
+.search-box {
   transition: none;
 }
 
-.app-search-box .app-search-form .search-input {
+.search-box .search-form .search-input {
   border-radius: 0;
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
 }
-.app-search-box .app-search-form .search-btn {
+.search-box .search-form .search-btn {
   top: 7px;
 }
-.app-search-box.is-visible {
+.search-box.is-visible {
   display: block;
 }
 
-.app-card-stat .stats-figure {
+.card-stat .stats-figure {
   font-size: 1.125rem;
 }
-.app-card-stat .stats-type {
+.card-stat .stats-type {
   font-size: 0.75rem;
 }

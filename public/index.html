@@ -1,4 +1,4 @@
-<?php
+<?php 
 // TODO mroe code to js,css
 function minifyHTML($html)
 {
@@ -17,7 +17,7 @@ function minifyHTML($html)
     
     $minified = preg_replace($search, $replace, $html);
      
-    return true ? $html : $minified;
+    return !DEBUGMODE ? $html : $minified;
     
 }
 
@@ -26,4 +26,3 @@ require_once '../app/autoload.inc';
 die(minifyHTML(ob_get_clean()));
 ob_end_flush();
 ob_clean();
-

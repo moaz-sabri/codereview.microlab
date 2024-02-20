@@ -13,21 +13,6 @@ use App\Utilities\Utilitie;
 trait Model
 {
     /**
-     * Default Columns
-     *
-     * An array defining default column names and their initial values for new records.
-     *
-     * @var array
-     */
-    public static $defaultColumns = [
-        "uid" => null,
-        "guide" => null,
-        "created_at" => null,
-        "updated_at" => null,
-        "deleted_at" => null,
-    ];
-
-    /**
      * Table Name
      *
      * The name of the database table associated with the model.
@@ -35,6 +20,15 @@ trait Model
      * @var string
      */
     protected string $tableName;
+
+    /**
+     * Primary ID
+     *
+     * The name of the primary key used internally for identification.
+     *
+     * @var string
+     */
+    protected string $base;
 
     /**
      * Primary ID
@@ -162,7 +156,7 @@ trait Model
      *
      * @var string|array
      */
-    public string|array $sort = 'updated_at';
+    public string|array $sort = 'uid';
 
     /**
      * Sort Direction
@@ -194,11 +188,32 @@ trait Model
      */
     protected function attributes(array $columns): object
     {
-        return (object) array_merge(
-            self::$defaultColumns,
-            array_map(function () {
-                return null;
-            }, $columns)
-        );
+        return (object)
+        array_map(function () {
+            return false;
+        }, $columns);
+    }
+
+    /**
+     * Check if Table Exists
+     *
+     * Checks if a table exists in the database.
+     *
+     * @param string $tableName The name of the table to check.
+     *
+     * @return bool|string True if the table exists, false otherwise.
+     */
+    static function tableIsExist(string $tableName): bool | string
+    {
+        $connection = DatabaseHandler::connect();
+
+        // Check if the table 'tableName' exists
+        $query = "SHOW TABLES LIKE '{$tableName}'";
+        $result = $connection->query($query);
+        if ($result->rowCount() > 0) :
+            return $tableName;
+        endif;
+
+        return false;
     }
 }

@@ -1,436 +1,438 @@
-Creating documentation for a new service in your PHP light-framework project is a crucial step in helping developers understand how to extend and use your light-framework effectively. Let's break down the process of creating documentation for adding a new service to your project.
+## Create Reminder
 
-## Creating Documentation for Adding a New Service to Your PHP light-framework
+This function creates a new reminder in the system.
 
-### Introduction
+### Parameters
 
-Begin your documentation by introducing the purpose of this document: creating a new service within your PHP light-framework. Explain that services are modules that provide specific functionality to your application and describe their role in enhancing the project's capabilities.
+- `request`: Object - The request object containing the data for the new reminder.
 
-### Prerequisites
+### Input Validation
 
-List any prerequisites developers should have before attempting to create a new service. This may include knowledge of PHP, the project structure, and familiarity with the existing services.
+1. Check if the request contains all the necessary fields for creating a reminder.
+2. Validate the input fields to ensure they meet the required criteria:
+   - `subject`: Title of the reminder (string, required).
+   - `reminder`: Time interval for reminder (string, required).
+   - `day`: Start date for the reminder (string, required, format: 'YYYY-MM-DD').
+   - `month`: End date for the reminder (string, required, format: 'YYYY-MM-DD').
 
-### Step 1: Create a New Service Folder
+### Functionality
 
-1.1. In the `modules` directory, create a new folder with a plural name that represents the new service. For example, if you're creating a "Blog" service, name the folder "blogs."
+1. Validate the input data received from the request object.
+2. If validation fails, return an error response indicating the validation errors.
+3. If validation passes:
+   - Create a new `ReminderCalendar` object.
+   - Set the `calendar_subject`, `calendar_message`, `calendar_remindertime`, `calendar_date_start`, and `calendar_date_end` attributes of the reminder object.
+   - Determine the end date based on the remindertime:
+     - If remindertime is '1D' (1 day), set the end date to the next day.
+     - If remindertime is '1W' (1 week), set the end date to 1 week later.
+     - If remindertime is '2W' (2 weeks), set the end date to 2 weeks later.
+     - If remindertime is '4W' (4 weeks), set the end date to 4 weeks later.
+   - Save the reminder object to the database.
+   - Return a success response with the newly created reminder object.
 
-### Step 2: Create a Service Singleton Class
-
-2.1. Inside the service folder, create a PHP class that acts as a singleton for the service. Name the class in singular form with an appropriate name for your service. For instance, if your service is for blogs, the class name might be `BlogService`.
-
-2.2. Implement the necessary methods and properties in the service class that will encapsulate the functionality of the new service. This may include methods for CRUD operations, data retrieval, and any specific features related to the service.
-
-2.3. Ensure that the service class extends the core light-framework class or interfaces as needed for consistency.
-
-### Step 3: Create a Service Model Class
-
-3.1. In the same service folder, create a model class that handles database interactions for the service. Name the model class appropriately, such as `BlogModel`.
-
-3.2. The model class should extend the base model class for database connectivity. Implement methods for interacting with the database, such as fetching, updating, or deleting record related to the service.
-
-3.3. Define the database table structure and relationships specific to the service in the model class.
-
-### Step 4: Create Service Routes
-
-4.1. In the `router` directory, create a new route file for the service, if it doesn't already exist. Name the route file accordingly, e.g., `blogs.php`.
-
-4.2. Define the routes for the new service in the route file. Specify the URL patterns, HTTP methods, and corresponding controller actions or service methods.
-
-### Step 5: Create Templates
-
-5.1. In the `templates` directory, create a folder for your service's templates if one doesn't exist. Name the folder appropriately, such as `blogs`.
-
-5.2. Within the service's template folder, create template files for different views or pages related to the service. These templates will define the UI for your service.
-
-### Step 6: Add Service to the Router
-
-6.1. In the core router configuration, add a route for your new service, pointing to the appropriate controller or service methods.
-
-### Conclusion
-
-Summarize the steps taken to create a new service within the light-framework, emphasizing the importance of adhering to the project's structure and conventions.
-
-### Additional Tips
-
-- Explain any conventions or best practices that developers should follow when creating a new service, such as naming conventions, folder structure, and code organization.
-- Provide code examples and usage scenarios to illustrate how to interact with the new service.
-- Offer troubleshooting tips or common pitfalls developers might encounter during the process.
-
-By following this documentation, developers will be equipped to create and integrate new services into your PHP light-framework effectively, taking advantage of the core features like OOP, Bootstrap integration, SVG icons, Quill editing, and MySQL connectivity.
-
-To help you better understand how to use the code structure you've outlined, I'll provide a simplified example of creating a "posts" service within your PHP light-framework, including the steps you've described. Please note that this example assumes you have the light-framework structure and core classes set up.
-
-### Step 1: Create Folder and Classes
-
-1.1. Create a folder for the "posts" service within the `modules` directory.
-
-1.2. Create the following classes:
-
-- `PostService` (Main service class)
-- `PostRequests` (Request handling class)
-- `PostModel` (Database model class)
-- `PostURLs` (URL routing class)
-
-### Step 2: Module Class (PostService)
+### Example
 
 ```php
-class PostService {
-    private $module;
+/**
+ * Create a new reminder.
+ *
+ * @param Object $request The request object containing reminder data.
+ * @return JsonResponse The JsonResponse containing the created reminder object or error message.
+ */
+public function create(Object $request): JsonResponse
+{
+    // Validate input data
+    $validator = Validator::make($request->all(), [
+        'day' => ['required' => true],
+        'month' => ['required' => true],
+        'subject' => ['required' => true],
+        'reminding' => ['required' => true],
+    ]);
 
-    public function __construct($module) {
-        $this->module = $module;
+    // Check for validation errors
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 400);
     }
 
-    public function dashboard() {
-        // Function to handle dashboard logic
-    }
+    // Create new reminder
+    $reminder = new ReminderCalendar();
+    $reminder->column->calendar_guide = $this->guide('C');
+    $reminder->column->calendar_owner = CryptLoader::decrypt('uid');
+    $reminder->column->calendar_subject = $data->subject;
+    $reminder->column->calendar_remindertime = $data->reminding;
+    $reminder->column->calendar_status = 'RUNNING';
 
-    public function main() {
-        // Function to handle main client-side logic
-    }
+    // Create a DateTime object for the current year, using the provided month and day
+    $startDate = new DateTime(date('Y') . '-' . $data->month . '-' . $data->day);
 
-    public function store() {
-        // Function to create a new post
-    }
+    // Add 1 week to the start date
+    $endDate = clone $startDate; // Create a copy of the start date
+    $endDate->sub(new DateInterval('P1D')); // Sub the current day
+    $endDate->add(new DateInterval('P' . $data->reminding)); // Add reminder date
 
-    public function create() {
-        // Function to display a form for creating a new post
-    }
+    // Format the dates as strings
+    $reminder->column->calendar_date_start = $startDate->format('Y-m-d');
+    $reminder->column->calendar_date_end = $endDate->format('Y-m-d');
 
-    public function edit($postId) {
-        // Function to edit an existing post
-    }
+    $reminder->save();
 
-    public function update($postId) {
-        // Function to update an existing post
-    }
-
-    public function delete($postId) {
-        // Function to delete an existing post
-    }
-
-    // Additional functions like switch, filter, sort, etc.
+    // Return success response
+    return new JsonResponse([
+        'message' => $this->responseMessage,
+        'callback' => $callback ?? false,
+    ]);
 }
 ```
 
-### Step 3: Page Preview (Inside PostService)
+## Update Reminder
+
+This function updates an existing reminder in the system.
+
+### Parameters
+
+- `request`: Object - The request object containing the data for updating the reminder.
+
+### Input Validation
+
+1. Check if the request contains all the necessary fields for updating a reminder.
+2. Validate the input fields to ensure they meet the required criteria:
+   - `subject`: Title of the reminder (string, required).
+   - `message`: Description of the reminder (string, optional).
+   - `reminder`: Time interval for reminder (string, required).
+   - `day`: Start date for the reminder (string, required, format: 'YYYY-MM-DD').
+   - `month`: End date for the reminder (string, required, format: 'YYYY-MM-DD').
+   - `status`: Status of the reminder (string, required, e.g., 'RUNNING', 'STOP').
+
+### Functionality
+
+1. Validate the input data received from the request object.
+2. If validation fails, return an error response indicating the validation errors.
+3. If validation passes:
+   - Find the reminder object to update based on the provided reminder ID.
+   - Update the attributes of the reminder object based on the input data.
+   - If an image is uploaded, update the image field accordingly.
+   - Save the updated reminder object to the database.
+   - Return a success response with the updated reminder object.
+
+### Example
 
 ```php
-public function pagePreview($object) {
+/**
+ * Update an existing reminder.
+ *
+ * @param Object $request The request object containing updated reminder data.
+ * @return JsonResponse The JsonResponse containing the updated reminder object or error message.
+ */
+public function update(Object $request): JsonResponse
+{
+    // Validate input data
+    $validator = Validator::make($request->all(), [
+        'day' => ['required' => true],
+        'month' => ['required' => true],
+        'subject' => ['required' => true],
+        'reminding' => ['required' => true],
+        'status' => ['required' => true],
+        'message' => ['max_length' => 3000],
+    ]);
+
+    // Check for validation errors
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 400);
+    }
+
+    // Find the reminder to update
+    $reminder = ReminderCalendar::findOrFail($id);
+
+    // Update reminder attributes
+    $reminder->calendar_subject = $request->input('calendar_subject');
+    $reminder->calendar_message = $request->input('calendar_message');
+    $reminder->calendar_remindertime = $request->input('calendar_remindertime');
+    $reminder->calendar_date_start = $request->input('calendar_date_start');
+    $reminder->calendar_date_end = $request->input('calendar_date_end');
+    $reminder->calendar_status = $request->input('calendar_status');
+
+    // If an image is uploaded, update the image field
+    if ($request->hasFile('calendar_image')) {
+        // Process and save the uploaded image
+        // Assuming you have a method to handle image upload and save the path to the reminder object
+        $imagePath = $this->uploadImage($request->file('calendar_image'));
+        $reminder->calendar_image = $imagePath;
+    }
+
+    // Save the updated reminder
+    $reminder->save();
+
+    // Return success response
+    return new JsonResponse([
+        'message' => $this->responseMessage,
+        'callback' => $callback ?? false,
+    ]);
+}
+
+```
+
+## Delete Reminder
+
+This function soft deletes an existing reminder in the system by setting the `deleted_at` date.
+
+### Parameters
+
+- `uid`: Integer - The ID of the reminder to delete.
+
+### Functionality
+
+1. Find the reminder object to delete based on the provided reminder ID.
+2. Set the `deleted_at` attribute of the reminder object to the current date and time.
+3. Save the updated reminder object to the database, effectively soft deleting it.
+4. Return a success response indicating that the reminder has been soft deleted.
+
+### Example
+
+```php
+/**
+ * Soft delete an existing reminder.
+ *
+ * @param int $id The ID of the reminder to delete.
+ * @return JsonResponse The JsonResponse containing a success message.
+ */
+public function delete(object $request): JsonResponse
+{
+    // Find the reminder to delete
+    $reminder = ReminderCalendar::findOrFail($id);
+
+    // Soft delete the reminder
+    if (isset($request->routeParams->reminder)) :
+        $uids = explode(',', $request->routeParams->reminder);
+
+        foreach ($uids as $uid) :
+            $reminderModel = new ReminderCalendarModel();
+            $reminderModel->conditions = [
+                ['calendar_uid', '=', $uid],
+                ['calendar_owner', '=', CryptLoader::decrypt('uid')]
+            ];
+
+            $reminder = $reminderModel->find();
+
+            if ($reminder) :
+                $reminder = $reminderModel->delete();
+                $this->statusCode = 200;
+            endif;
+        endforeach;
+    endif;
+
+    // Return success response
+    return new JsonResponse([
+        'message' => $this->responseMessage,
+        'callback' => $callback ?? false,
+    ]);
+}
+
+```
+
+## View All Reminders
+
+This function retrieves all reminders associated with the current user.
+
+### Parameters
+
+- `request`: Object - The request object containing any additional parameters for filtering or pagination.
+
+### Functionality
+
+1. Retrieve all reminders associated with the current user.
+2. Optionally, apply any additional filtering or pagination based on the request parameters.
+3. Return a success response containing the list of reminders.
+
+### Example
+
+```php
+/**
+ * Retrieve all reminders for the current user.
+ *
+ * @param Object $request The request object containing additional parameters.
+ * @return Response The response containing the list of reminders.
+ */
+public function index(object $request):Response
+{
+    // Retrieve current user ID or any other identification method
+    $reminderModel = new ReminderCalendarModel;
+    $reminderModel->conditions = [['calendar_owner', '=', CryptLoader::decrypt('uid')]];
+
+    // Query reminders associated with the current user
+    $reminderModel->pagination = true;
+    $reminderModel->sort = 'date_start';
+
+    $result = $reminderModel->get();
+
+    // Return success response with reminders
     return (object) [
-        "obj" => $object,
-        "view" => "templates@module@index",
-        "meta" => [
-            "title" => PROJECT_NAME
-        ]
+        'view' => ReminderCalendarUrls::$resource . 'index',
+        'data' => ['reminder' => $result],
+        'theme' => 'cpanel',
+        'meta' => ['title' => "Reminder Calendar"],
+        'bscripts' => AutoLoader::getSourceFormAndTable()
     ];
 }
 ```
 
-### Step 4: Model Class (PostModel)
+## Reminder Editor
 
-```php
-class PostModel {
-    private $tableName = 'posts';
-    private $primaryKey = 'id';
+This UI component allows users to update reminder data such as title, description, reminder time, start date, end date, status, and optionally upload an image.
 
-    // Define other properties and methods for database interactions
-}
+### Features
+
+1. Display the current reminder data in input fields or text areas for editing.
+2. Allow users to modify the reminder title, description, reminder time, start date, end date, and status.
+3. Optionally provide a file input field for users to upload a new image for the reminder.
+4. Provide a submit button to save the changes made by the user.
+5. Optionally provide a cancel button to discard the changes and return to the previous view.
+
+### Example
+
+```html
+<form action="/reminders/update" method="POST" enctype="multipart/form-data">
+  <!-- Reminder Title -->
+  <label for="calendar_subject">Title:</label>
+  <input
+    type="text"
+    id="calendar_subject"
+    name="calendar_subject"
+    value="Your Reminder Title"
+    required
+  />
+
+  <!-- Reminder Description -->
+  <label for="calendar_message">Description:</label>
+  <textarea id="calendar_message" name="calendar_message">
+Your Reminder Description</textarea
+  >
+
+  <!-- Reminder Time -->
+  <label for="calendar_remindertime">Reminder Time:</label>
+  <select id="calendar_remindertime" name="calendar_remindertime" required>
+    <option value="1D">1 Day</option>
+    <option value="1W">1 Week</option>
+    <option value="2W">2 Weeks</option>
+    <option value="4W">4 Weeks</option>
+  </select>
+
+  <!-- Start Date -->
+  <label for="calendar_date_start">Start Date:</label>
+  <input
+    type="date"
+    id="calendar_date_start"
+    name="calendar_date_start"
+    value="2024-08-26"
+    required
+  />
+
+  <!-- End Date -->
+  <label for="calendar_date_end">End Date:</label>
+  <input
+    type="date"
+    id="calendar_date_end"
+    name="calendar_date_end"
+    value="2025-08-26"
+    required
+  />
+
+  <!-- Status -->
+  <label for="calendar_status">Status:</label>
+  <select id="calendar_status" name="calendar_status" required>
+    <option value="RUNNING">Running</option>
+    <option value="PAUSED">Paused</option>
+    <option value="COMPLETED">Completed</option>
+  </select>
+
+  <!-- Image Upload -->
+  <label for="calendar_image">Upload Image:</label>
+  <input type="file" id="calendar_image" name="calendar_image" />
+
+  <!-- Submit Button -->
+  <button type="submit">Save Changes</button>
+
+  <!-- Cancel Button (optional) -->
+  <button type="button" onclick="window.history.back()">Cancel</button>
+</form>
 ```
 
-### Step 5: URLs Class (PostURLs)
+<hr>
 
-```php
-class PostURLs {
-    public function getRoutes() {
-        return [
-            [
-                "method" => "GET",
-                "module" => "Post",
-                "url" => "posts/dashboard",
-                "function" => "dashboard",
-                "authorization" => false
-            ],
-            [
-                "method" => "GET",
-                "module" => "Post",
-                "url" => "posts/main",
-                "function" => "main",
-                "authorization" => false
-            ],
-            [
-                "method" => "POST",
-                "module" => "Post",
-                "url" => "posts/store",
-                "function" => "store",
-                "authorization" => true
-            ],
-            // Define other routes as needed
-        ];
-    }
-}
-```
+### Users Table
 
-### Step 6: Templates Folder
+- `uid`: Primary key
+- `name`: User's name
+- `email`: User's email
+- `password`: User's password (hashed)
+- etc..
 
-Create a folder named "posts" within the `templates` directory. Inside this folder, you can create template files for displaying posts.
+### ReminderCalendars Table
 
-### Step 7: Input Validation and Handling (Inside PostService)
+- `uid`: Primary key
+- `calendar_owner`: Foreign key referencing the `id` column of the `users` table
+- `calendar_subject`: Title of the reminder
+- `calendar_message`: Description of the reminder
+- `calendar_remindertime`: Time interval for the reminder
+- `calendar_date_start`: Start date for the reminder
+- `calendar_date_end`: End date for the reminder
+- `calendar_status`: Status of the reminder (e.g., 'RUNNING', 'PAUSED', 'COMPLETED')
+- `created_at`: Timestamp when the reminder was created
+- `updated_at`: Timestamp when the reminder was last updated
+- `deleted_at`: Timestamp when the reminder was soft deleted
 
-```php
-$validationRules = [
-    'guide' => ['min_length' => 11, 'max_length' => 14],
-];
-$validation = $this->validate($_POST, $validationRules);
-$errors = $this->validateFormData($validation);
+### MailsHistories Table
 
-if (!empty($errors)) {
-    $this->back($errors);
-}
+- `uid`: Primary key
+- `reminder_calendar_id`: Foreign key referencing the `id` column of the `reminder_calendars` table
+- `mail_subject`: Subject of the email sent
+- `mail_content`: Content of the email sent
+- `sent_at`: Timestamp when the email was sent
+- `created_at`: Timestamp when the mail history entry was created
+- `updated_at`: Timestamp when the mail history entry was last updated
 
-$data = $validation['validated'];
+### Relationships
 
-// Now, you can use the validated data in your service logic
-```
+- Each `ReminderCalendar` belongs to a `User` (owner).
+- Each `User` can have many `ReminderCalendars`.
+- Each `ReminderCalendar` can have many `MailsHistories`.
+- Each `MailsHistory` belongs to a `ReminderCalendar`.
 
-Please note that this example provides a basic structure for creating a "posts" service. You would need to adapt and extend this structure to fit the specific requirements and complexity of your project. Additionally, you should include the actual implementations of functions, database interactions, and view templates in your code.
+<hr>
 
-It looks like you've outlined some important steps and actions to take after creating a new service in your PHP light-framework. Let's go over each of these actions in more detail:
+## Reminder Cron Job
 
-1. **Input Validation**:
+This cron job is responsible for checking reminders and sending emails if necessary. It performs the following tasks:
 
-   - You're performing input validation using `$this->validate($_POST, $validationRules)`. This is a good practice to ensure that incoming data meets the expected criteria, which helps prevent security vulnerabilities and data integrity issues.
+1. **Check Reminders**:
 
-2. **Filter Guide**:
+   - Query the database for reminders scheduled for the current day.
+   - Filter out reminders that have already been sent or have encountered errors during previous attempts.
 
-   - You're using `preg_match` to filter the guide. This is useful for checking if the guide follows a specific pattern, providing data integrity and security.
+2. **Send Emails**:
 
-3. **Model Service**:
+   - For each remaining reminder, compose and send an email to the specified recipient(s) with the reminder details.
+   - Handle any errors that may occur during the email sending process and mark the reminder accordingly.
 
-   - You mentioned using methods like `save`, `getOne`, `getMany`, `delete`, and `performJoin` from your model service. These are essential database operations and help maintain data consistency and retrieval.
+3. **Update MailsHistories**:
+   - If the email is sent successfully, save a record in the `MailsHistories` table with a status of -1 (pending) to indicate that the email has been scheduled to be sent.
+   - If there is an error during sending, save a record with a status of 0 to indicate that the email sending encountered an error.
+   - If the email is successfully sent, update the record with a status of 1 to indicate that the email has been sent successfully.
 
-4. **Response Actions**:
+### Implementation Details
 
-   - You're handling responses appropriately based on the outcome of your actions. Using HTTP status codes like 200 and 500 is a good practice for conveying the result of the operation.
-   - You're also creating logs to track specific events, which is important for debugging and auditing.
+- The cron job is scheduled to run daily at a specific time using the server's cron scheduling system.
+- The job is implemented as a PHP script or a Laravel command that can be executed via the command line.
+- Error handling is implemented to handle any exceptions or errors that may occur during the reminder checking and email sending process.
+- Logging is used to record the execution of the cron job and any errors encountered during the process.
 
-5. **Send Mail**:
-   - Sending emails is a common functionality for many web applications. You're using an email sender class to send emails, which is a good way to encapsulate email functionality.
+### Example Cron Job Script
 
-These actions are all integral parts of building a robust and secure web application. However, make sure to consider the following additional points:
+```bash
+#!/bin/bash
 
-- **Exception Handling**: Consider adding try-catch blocks to handle exceptions gracefully, especially when dealing with database operations and email sending. This ensures that errors are captured and handled appropriately.
+# Change directory to the project root
+cd /path/to/your/project
 
-- **Security**: Ensure that your input validation is comprehensive and covers all potential security vulnerabilities, such as SQL injection, cross-site scripting (XSS), and CSRF attacks.
-
-- **Documentation**: Document these actions and best practices within your light-framework's documentation. This will help other developers understand how to use these features effectively.
-
-- **Testing**: Implement unit tests and integration tests to verify that these actions work as expected. Automated testing helps catch regressions and ensures the reliability of your code.
-
-- **Logging**: Extend your logging system to capture more detailed information, such as request details, timestamps, and user information, to aid in debugging and auditing.
-
-By following these guidelines and continually improving your codebase, you'll be able to create a more stable and maintainable PHP light-framework for building web applications.
-
-# of Arabic
-
-لإنشاء خدمة جديدة ضمن مشروع الإطار الخاص بك في PHP ، يُعتبر إنشاء مستند مهم للمساعدة في فهم كيفية توسيع واستخدام الإطار الخاص بك بفعالية. دعونا نقسم عملية إنشاء المستند لإضافة خدمة جديدة إلى مشروع الإطار الخاص بك إلى خطوات.
-
-## إنشاء مستند لإضافة خدمة جديدة إلى إطار PHP الخاص بك
-
-### مقدمة
-
-ابدأ المستند الخاص بك بتقديم هدف هذا المستند: إنشاء خدمة جديدة ضمن إطار PHP الخاص بك. شرح دور الخدمات في تعزيز قدرات المشروع وصف دورهم في تحسين قدرات المشروع.
-
-### الشروط الأساسية
-
-قم بتوضيح أي شروط أساسية يجب أن يتوفرها المطورون قبل محاولة إنشاء خدمة جديدة. قد تتضمن هذه المعرفة بلغة PHP وهيكل المشروع والمعرفة بالخدمات الحالية.
-
-### الخطوة 1: إنشاء مجلد جديد
-
-1.1. في دليل `modules` ، قم بإنشاء مجلد جديد بالاسم الجمعي الذي يمثل الخدمة الجديدة. على سبيل المثال ، إذا كنت تقوم بإنشاء خدمة "المدونة" ، فقم بتسمية المجلد "blogs".
-
-### الخطوة 2: إنشاء صف الخدمة الرئيسي
-
-2.1. داخل مجلد الخدمة ، قم بإنشاء صف PHP يعمل كمفرد للخدمة. اسم الصف يجب أن يكون في الشكل المفرد ويتناسب مع خدمتك. على سبيل المثال ، إذا كانت خدمتك للمدونات ، فإن اسم الصف يمكن أن يكون "BlogService".
-
-2.2. نفذ الأساليب والخصائص اللازمة في صف الخدمة التي ستحتوي على وظائف الخدمة الرئيسية. يمكن أن تتضمن هذه الأساليب وظائف لعمليات CRUD واسترجاع البيانات وأي ميزات محددة تتعلق بالخدمة.
-
-2.3. تأكد من أن صف الخدمة يمتد من صف الإطار الأساسي أو الواجهات حسب الحاجة للتوافق.
-
-### الخطوة 3: إنشاء صف النموذج للخدمة
-
-3.1. في نفس مجلد الخدمة ، قم بإنشاء صف النموذج الذي يتعامل مع تفاعلات قاعدة البيانات للخدمة. اسم النموذج يجب أن يكون مناسبًا ، مثل "BlogModel".
-
-3.2. يجب أن يمتد صف النموذج من صف النموذج الأساسي للاتصال بقاعدة البيانات. قم بتنفيذ الأساليب للتفاعل مع قاعدة البيانات ، مثل الاستعلام عن وتحديث أو حذف السجلات المتعلقة بالخدمة.
-
-3.3. قم بتعريف هيكل الجدول في قاعدة البيانات والعلاقات المحددة بينها في صف النموذج.
-
-### الخطوة 4: إنشاء صف الروابط
-
-4.1. في دليل التوجيه الأساسي ، قم بإنشاء ملف توجيه جديد للخدمة إذا لم يكن موجودًا بالفعل. اسمح للملف بالاسم المناسب ، مثل "blogs.php".
-
-4.2. قم بتعريف المسارات للخدمة الجديدة في ملف التوجيه. حدد أنماط عناوين URL وأساليب HTTP والأفعال المطابقة أو أساليب الخدمة.
-
-### الخطوة 5: إنشاء القوالب
-
-5.1. في دليل "القوالب" ، قم بإنشاء مجلدًا لقوالب الخدمة الخاصة بك إذا لم يكن موجودًا بالفعل. اسمح للمجلد بالاسم المناسب ، مثل "blogs".
-
-5.2. داخل مجلد القوالب الخاص بالخدمة ، يمكنك إنشاء ملفات قوالب للعرض الواجهة الرسومية للخدمة الخاصة بك.
-
-### الخطوة 6: إضافة التحقق من الإدخال والتحكم
-
-6.1. قم بتعريف قواعد التحقق من الإدخال للبيانات الواردة ، مثل `['guide' => ['min_length' => 11, 'max_length' => 14]]`.
-
-6.2. قم بتنفيذ التحقق من الإدخال باستخدام `validate($_POST, $validationRules)` للتحقق من مطابقة البيانات المدخلة للقواعد.
-
-6.3. قم بمعالجة أي أخطاء وإرجاعها إذا كانت موجودة باستخدام `$this->back($errors)`.
-
-6.4. استخدم البيانات المحققة للمتابعة في منطق الخدمة الخاص بك.
-
-يرجى ملاحظة أن هذا المثال يقدم هيكلًا أساسيًا لإنشاء خدمة "المدونة". ستحتاج إلى تكييف وتوسيع هذا الهيكل لتناسب متطلبات مشروعك بشكل محدد. بالإضافة إلى ذلك ، يجب عليك تضمين تنفيذات الوظائف الفعلية وتفاعلات قاعدة البيانات وقوالب العرض الفعلية في الشفرة الخاصة بك.
-
-````markdown
-لإنشاء خدمة جديدة في إطار PHP الخاص بك، يجب عليك اتباع الخطوات التالية. سنستخدم كخدمة مثال "المدونات" لهذا الشرح.
-
-## الخطوة 1: إنشاء المجلد والصفوف
-
-1.1. قم بإنشاء مجلد للخدمة الجديدة داخل الدليل `modules`. سنسمي المجلد "blogs".
-
-1.2. قم بإنشاء الصفوف التالية:
-
-- `BlogService` (صف الخدمة الرئيسي)
-- `BlogRequests` (صف لمعالجة الطلبات)
-- `BlogModel` (صف النموذج لهيكل قاعدة البيانات)
-- `BlogURLs` (صف لتوجيه الروابط)
-
-## الخطوة 2: صف الخدمة (BlogService)
-
-```php
-class BlogService {
-    private $module;
-
-    public function __construct($module) {
-        $this->module = $module;
-    }
-
-    public function dashboard() {
-        // منطق الصفحة الرئيسية لوحة التحكم
-    }
-
-    public function main() {
-        // منطق الصفحة الرئيسية للزوار
-    }
-
-    public function store() {
-        // إنشاء مدونة جديدة
-    }
-
-    public function create() {
-        // عرض نموذج لإنشاء مدونة جديدة
-    }
-
-    public function edit($postId) {
-        // تحرير مدونة موجودة
-    }
-
-    public function update($postId) {
-        // تحديث مدونة موجودة
-    }
-
-    public function delete($postId) {
-        // حذف مدونة موجودة
-    }
-
-    // وظائف إضافية مثل التبديل، التصفية، الترتيب، إلخ.
-}
-```
-````
-
-## الخطوة 3: معاينة الصفحة (داخل BlogService)
-
-```php
-public function pagePreview($object) {
-    return (object) [
-        "data" => $object,
-        "view" => "templates@module@index",
-        "meta" => [
-            "title" => PROJECT_NAME
-        ]
-    ];
-}
-```
-
-## الخطوة 4: صف النموذج (BlogModel)
-
-```php
-class BlogModel {
-    private $tableName = 'المدونات';
-    private $primaryKey = 'المفتاح_الرئيسي';
-
-    // تعريف الخصائص والأساليب الأخرى للتفاعل مع قاعدة البيانات
-}
-```
-
-## الخطوة 5: صف الروابط (BlogURLs)
-
-```php
-class BlogURLs {
-    public function getRoutes() {
-        return [
-            [
-                "method" => "GET",
-                "module" => "Blog",
-                "url" => "المدونات/لوحة-التحكم",
-                "function" => "dashboard",
-                "authorization" => false
-            ],
-            [
-                "method" => "GET",
-                "module" => "Blog",
-                "url" => "المدونات/الصفحة-الرئيسية",
-                "function" => "main",
-                "authorization" => false
-            ],
-            [
-                "method" => "POST",
-                "module" => "Blog",
-                "url" => "المدونات/إنشاء",
-                "function" => "store",
-                "authorization" => true
-            ],
-            // تعريف المزيد من الروابط حسب الحاجة
-        ];
-    }
-}
-```
-
-## الخطوة 6: مجلد القوالب
-
-قم بإنشاء مجلد بالاسم "blogs" داخل الدليل `templates`. داخل هذا المجلد، يمكنك إنشاء ملفات القوالب الخاصة بعرض المدونات.
-
-## الخطوة 7: التحقق من الإدخال والمعالجة (داخل BlogService)
-
-```php
-$validationRules = [
-    'guide' => ['min_length' => 11, 'max_length' => 14],
-];
-$validation = $this->validate($_POST, $validationRules);
-$errors = $this->validateFormData($validation);
-
-if (!empty($errors)) {
-    $this->back($errors);
-}
-
-$data = $validation['validated'];
-
-// الآن، يمكنك استخدام البيانات المحققة في منطق الخدمة الخاص بك
-```
-
-يرجى ملاحظة أن هذا المثال يوفر هيكلًا أساسيًا لإنشاء خدمة "المدونة". ستحتاج إلى تكييف وتوسيع هذا الهيكل لتناسب متطلبات مشروعك الخاص بشكل محدد. بالإضافة إلى ذلك، يجب عليك تضمين تنفيذات الوظائف الفعلية وتفاعلات قاعدة البيانات وقوالب العرض الفعلية في الشفرة الخاصة بك.
-
-```
-
-هذا النص يقدم نفس المعلومات الموجودة في المحتوى الأصلي ولكنه مترجم إلى اللغة العربية،
-
- مع أمثلة للشفرة المصدرية.
+# Run the Laravel artisan command to execute the reminder cron job
+php /path/to/your/projec/app/reminder.php
 ```

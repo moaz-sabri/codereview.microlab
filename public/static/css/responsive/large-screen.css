@@ -1,7 +1,7 @@
-.app-sidepanel {
+.sidepanel {
   transition: none;
 }
 
-.app-sidepanel.sidepanel-visible {
+.sidepanel.sidepanel-visible {
   display: block;
 }

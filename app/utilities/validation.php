@@ -2,6 +2,7 @@
 
 namespace App\Utilities;
 
+use App\Bootstrap\JsonResponse;
 use DateTime;
 
 trait Validation
@@ -14,7 +15,7 @@ trait Validation
      *
      * @return array An array containing 'errors' and 'validated' data.
      */
-    public static function validate(object $data, array $rules): array
+    public static function validates(object $data, array $rules): object | array
     {
         $errors = [];
         $validated = [];
@@ -54,7 +55,7 @@ trait Validation
             ) {
                 $errors[$field][] = "{$field} must not exceed {$rule['max_length']} characters.";
             } else {
-                $validated[$field] = $value;
+                $validated[$field] = empty($value) ? null : $value;
             }
 
             if (isset($rule['type'])) {
@@ -144,11 +145,16 @@ trait Validation
             }
         }
 
-        return [
-            "errors" => $errors,
-            "validated" => (object) $validated,
-        ];
+        if (Count($errors) > 0) :
+            return [
+                "res" => new JsonResponse($errors, 400),
+                "errors" => $errors
+            ];
+        else :
+            return (object) $validated;
+        endif;
     }
+
 
 
     /**
@@ -258,30 +264,5 @@ trait Validation
         }
 
         return true;
-    }
-
-
-    /**
-     * Generate a formatted error message string from a validation array.
-     *
-     * @param array $validation An array of validation errors.
-     *                         Example: ['field1' => ['Error 1', 'Error 2'], 'field2' => ['Error 3']]
-     * @param string $delimiter The delimiter to use between error messages (default is '<br>').
-     *
-     * @return string The formatted error message string.
-     */
-    public static function validateFormData(array $validation): string
-    {
-        $errors = '';
-
-        if ($validation['errors']) :
-            foreach ($validation['errors'] as $fieldErrors) :
-                foreach ($fieldErrors as $error) :
-                    $errors .= $error . '<br>';
-                endforeach;
-            endforeach;
-        endif;
-
-        return $errors;
     }
 }

@@ -2,11 +2,10 @@
 
 namespace App\Database;
 
-use App\Bootstrap\Request;
-use App\Modules\Records\Loader\RecordLoader;
-use App\Utilities\Utilitie;
 use PDO;
 use PDOException;
+use App\Extends\Record\RecordLoader;
+use App\Utilities\Utilitie;
 
 class DatabaseHandler
 {
@@ -85,16 +84,16 @@ trait Process
 
                 foreach (array_keys($objectProperties) as $key) :
                     $table = $this->tableName;
-                    $getCols .= "`{$table}`.`{$key}` AS `{$table}_{$key}`,";
+                    $getCols .= "`{$table}`.`{$key}` AS `{$key}`,";
                 endforeach;
 
                 foreach ($this->merge as $table) {
                     if (is_object($table['columns'])) :
                         foreach ($table['columns'] as $column => $t) :
                             if (is_numeric($column)) :
-                                $getCols .= "`{$table['key']}`.`{$t}` AS `{$table['key']}_{$t}`,";
+                                $getCols .= "`{$table['key']}`.`{$t}` AS `{$t}`,";
                             else :
-                                $getCols .= "`{$table['key']}`.`{$column}` AS `{$table['key']}_{$column}`,";
+                                $getCols .= "`{$table['key']}`.`{$column}` AS `{$column}`,";
                             endif;
                         endforeach;
                     else :
@@ -130,16 +129,6 @@ trait Process
      */
     private function pagination()
     {
-        $request = new Request;
-
-        if (isset($request->parameters->queries->current)) {
-            $this->current = filter_var($request->parameters->queries->current, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 99]]) ?? $this->current;
-        }
-
-        if (isset($request->parameters->queries->count)) {
-            $this->count = filter_var($request->parameters->queries->count, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 99]]) ?? $this->count;
-        }
-
         // Calculate the starting row for pagination
         $this->startRow = ($this->current - 1) * $this->count;
     }
@@ -172,7 +161,7 @@ trait Process
                     //         0          1           2                    3
                     // Ex. `created_at` BETWEEN '2023-09-01 04:13' ? '2023-09-30 04:13'
                     $sec_con = $value[1];
-                    $data = ":{$key}_{$value[0]} AND :to_{$key}_{$value[0]}";
+                    $data = ":{$value[0]} AND :to_{$value[0]}";
 
                 elseif (in_array($value[1], ['IN', 'NOT IN'])) :
                     //       0    1     2
@@ -182,7 +171,7 @@ trait Process
                     $vals = [];
                     foreach ($value[2] as $n => $i) :
                         $x = "in_" . $n;
-                        $vals[] = ":{$x}_{$value[0]}";
+                        $vals[] = ":{$value[0]}";
                     endforeach;
                     $data = "(" . implode(", ", $vals) . ")";
 
@@ -190,7 +179,7 @@ trait Process
                     //          0       1         2
                     // Ex. `created_at` ? '2023-09-30 04:13'
                     $sec_con = $value[1];
-                    $data = ":{$key}_{$value[0]}";
+                    $data = ":{$value[0]}";
 
                 endif;
 
@@ -209,7 +198,7 @@ trait Process
                     //     0       1         2            3                  4
                     // Ex. ? `created_at` BETWEEN '2023-09-01 04:13' ? '2023-09-30 04:13'
                     $sec_con = $value[2];
-                    $data = ":{$key}_{$value[1]} AND :to_{$key}_{$value[1]}";
+                    $data = ":{$value[1]} AND :to_{$value[1]}";
 
                 elseif (in_array($value[2], ['IN', 'NOT IN'])) :
                     //     0   1   2       3
@@ -219,7 +208,7 @@ trait Process
                     $vals = [];
                     foreach ($value[3] as $n => $i) :
                         $x = "in_" . $n;
-                        $vals[] = ":{$x}_{$value[1]}";
+                        $vals[] = ":{$value[1]}";
                     endforeach;
                     $data = "(" . implode(", ", $vals) . ")";
 
@@ -227,7 +216,7 @@ trait Process
                     //      0      1      2        3
                     // Ex. ? `created_at` ? '2023-09-30 04:13'
                     $sec_con = $value[2];
-                    $data = ":{$key}_{$value[1]}";
+                    $data = ":{$value[1]}";
 
                 endif;
             endif;
@@ -259,8 +248,8 @@ trait Process
                 elseif (in_array($value[1], ['BETWEEN', 'NOT BETWEEN'])) :
                     //         0          1           2                    3
                     // Ex. `created_at` BETWEEN '2023-09-01 04:13' ? '2023-09-30 04:13'
-                    $values[] = [":{$key}_{$value[0]}", $value[2]];
-                    $values[] = [":to_{$key}_{$value[0]}", $value[3]];
+                    $values[] = [":{$value[0]}", $value[2]];
+                    $values[] = [":to_{$value[0]}", $value[3]];
 
                 elseif (in_array($value[1], ['IN', 'NOT IN'])) :
                     //       0   1      2
@@ -274,7 +263,7 @@ trait Process
                 else :
                     //          0       1         2
                     // Ex. `created_at` ? '2023-09-30 04:13'
-                    $values[] = [":{$key}_{$value[0]}", $value[2]];
+                    $values[] = [":{$value[0]}", $value[2]];
                 endif;
 
             else :
@@ -286,8 +275,8 @@ trait Process
                 elseif (in_array($value[2], ['BETWEEN', 'NOT BETWEEN'])) :
                     //     0       1         2            3                  4
                     // Ex. ? `created_at` BETWEEN '2023-09-01 04:13' ? '2023-09-30 04:13'
-                    $values[] = [":{$key}_{$value[1]}", $value[3]];
-                    $values[] = [":to_{$key}_{$value[1]}", $value[4]];
+                    $values[] = [":{$value[1]}", $value[3]];
+                    $values[] = [":to_{$value[1]}", $value[4]];
 
 
                 elseif (in_array($value[2], ['IN', 'NOT IN'])) :
@@ -302,7 +291,7 @@ trait Process
                 else :
                     //      0      1      2        3
                     // Ex. ? `created_at` ? '2023-09-30 04:13'
-                    $values[] = [":{$key}_{$value[1]}", $value[3]];
+                    $values[] = [":{$value[1]}", $value[3]];
 
                 endif;
             endif;
@@ -328,12 +317,12 @@ trait Process
         // Get the properties of the object
         $objectProperties = get_object_vars($this->column);
 
-        if (!$this->deep && key_exists('deleted_at', $objectProperties)) :
+        if (!$this->deep && key_exists($this->base . '_deleted_at', $objectProperties)) :
 
             if (isset($this->conditions) && count($this->conditions) > 0) :
-                $sql .= " AND `{$this->tableName}`.`deleted_at` IS NULL ";
+                $sql .= " AND `{$this->tableName}`.`{$this->base}_deleted_at` IS NULL ";
             else :
-                $sql .= " WHERE `{$this->tableName}`.`deleted_at` IS NULL ";
+                $sql .= " WHERE `{$this->tableName}`.`{$this->base}_deleted_at` IS NULL ";
             endif;
         endif;
 
@@ -352,26 +341,28 @@ trait Process
     private function format($sql): string
     {
         // Add ORDER BY and LIMIT clauses for pagination
+
+
         if (is_array($this->sort)) :
             $sorts = "";
             foreach ($this->sort as $key => $sort) {
-                $sorts .= " `{$this->tableName}`.`{$sort['by']}` {$sort['order']}, ";
+                $sorts .= " `{$this->tableName}`.`{$sort['by']}` " . $this->base . "_" . $sort['order'] . ", ";
             }
             $sorts = rtrim($sorts, ", ");
-            $sql .= " ORDER BY {$sorts} ";
+            $sql .= " ORDER BY " . $this->base . "_" .  $sorts;
 
         else :
 
             // Get the properties of the object
             $objectProperties = get_object_vars($this->column);
 
-            if (!key_exists($this->sort, $objectProperties)) $this->sort = $this->primaryKey;
+            if (!key_exists($this->base . "_" . $this->sort, $objectProperties)) $this->sort =  $this->primaryKey;
 
-            $sql .= " ORDER BY `{$this->tableName}`.`{$this->sort}` {$this->direction} ";
+            $sql .= " ORDER BY `{$this->tableName}`.`" . $this->base . "_" . $this->sort . "` {$this->direction} ";
         endif;
 
         $sql .= " LIMIT {$this->startRow}, {$this->count}";
-
+    
         return $sql;
     }
 
@@ -484,6 +475,7 @@ trait Process
         $sql = $this->isDeep($sql);
 
         $db = DatabaseHandler::connect();
+        $this->sqlQuery = $sql;
         $stmt = $db->prepare($sql);
 
 
@@ -523,8 +515,8 @@ trait Process
 
         $sql .= " GROUP BY {$this->list[0]} ORDER BY total DESC LIMIT {$this->count};";
 
-        $stmt = $db->prepare($sql);
         $this->sqlQuery = $sql;
+        $stmt = $db->prepare($sql);
 
         if (isset($this->conditions) && count($this->conditions) > 0) :
             $stmt = $this->setConditions($stmt);
@@ -554,14 +546,16 @@ trait Process
 
             return (object) [
                 "result" => $response,
-                "current" => $this->current,
-                "count" => $this->count,
-                "total" => $total ?? 0,
-                "pages" => $pages,
-                "url" => $url[0],
+                "info" => (object) [
+                    "current" => $this->current,
+                    "count" => $this->count,
+                    "total" => $total ?? 0,
+                    "pages" => $pages,
+                    "url" => $url[0],
+                ]
             ];
         else :
-            return (object) $response;
+            return (object) ["result" => $response];
         endif;
     }
 }

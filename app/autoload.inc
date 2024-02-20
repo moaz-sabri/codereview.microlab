@@ -1,120 +1,83 @@
 <?php
 
-namespace App;
+use App\Modules\Core\Loader\CryptLoader;
 
 session_start();
 
 $start_time = microtime(true);
 
 // Include the config and Core files
-require_once dirname(__FILE__) . '/bootstrap/config.php';
+require_once dirname(__FILE__) . '/bootstrap/configs.php';
 
 // Set CSP header with nonce and image source directives
 header("Content-Security-Policy: default-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;");
+setcookie('source', DOMAIN_SOURCE, time() + 24 * 60 * 60, '/');  // Expires in 16 Days
 
-use App\Bootstrap\Core;
-use App\Modules\Permissions\Loader\CryptLoader;
-use App\Modules\Traffic\Loader\TrafficLoader;
-use App\Utilities\Utilitie;
+use App\Bootstrap\Web;
+use App\Extends\Record\RecordLoader;
 
-// Create a new instance of the Core class to handle requests
-$core = new Core();
+use App\Bootstrap\Security;
 
-// Set a cookie using the Set-Cookie header
-setcookie('token', CryptLoader::decrypt('token'), time() + 1382400, '/');  // Expires in 16 Days
-setcookie('source', DOMAIN_SOURCE, time() + 1382400, '/');  // Expires in 16 Days
-
-// Define default values for meta tags and page details
-$defaultMetaTags = [
-    'description'       => DESCRIPTION,
-    'keywords'          => KEYWORDS,
-    'author_name'       => AUTHOR_NAME,
-    'title_page'        => TITLE_PAGE,
-    'domain_source'     => DOMAIN_SOURCE,
-    'logo'              => LOGO,
-    'thumbnail'         => THUMBNAIL,
-    'project_name'      => PROJECT_NAME,
-];
-
-// Merge user-provided meta tags with default values
-$metaTags  = (object) array_merge(
-    $defaultMetaTags,
-    array_intersect_key($data->meta ?? [], $defaultMetaTags)
-);
-
-?>
-<!DOCTYPE html>
-<html dir='<?= $core->dir ?>' lang='<?= $core->language ?>'>
-
-<head>
-    <!-- Base -->
-    <meta charset='UTF-8'>
-    <!-- <meta http-equiv='X-UA-Compatible' content='ie=edge'> -->
-    <meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <link rel='canonical' href='<?= DOMAIN_SOURCE ?>'>
-    <meta name='robots' content='index, home'>
-    <base href='<?= DOMAIN_SOURCE ?>'>
-    <link rel="canonical" href="<?= DOMAIN_SOURCE ?>" />
+/**
+ * Autoload Classes from Namespace
+ *
+ * This function is used with spl_autoload_register to automatically load classes
+ * based on the namespace and directory structure.
+ *
+ * @param string $className The fully-qualified class name.
+ *
+ * @return void
+ */
+spl_autoload_register(function ($className): void {
+    // Convert namespace separators to directory separators
+    $className = strtolower(
+        str_replace(
+            ['App', '\\'],
+            ['', '/'],
+            $className
+        ) . '.php'
+    );
 
 
-    <!-- Main -->
-    <meta name='description' content='<?= $metaTags->description ?>'>
-    <meta name='keywords' content='<?= $metaTags->keywords ?>'>
-    <meta name=' author' content='<?= $metaTags->author_name ?>'>
-    <meta name='msapplication-TileImage' content='<?= $metaTags->thumbnail ?>'>
+    // Check if the class file exists
+    if (file_exists(WEBROOT . $className)) :
+        // Build the full path to the class file
+        require_once WEBROOT . $className;
 
-    <!-- Twitter -->
-    <meta name='twitter:description' content='<?= $metaTags->description ?>'>
-    <meta name='twitter:image' content='<?= $metaTags->thumbnail ?>'>
-    <meta name='twitter:title' content='<?= $metaTags->title_page ?>'>
-    <meta name='twitter:card' content='<?= $metaTags->description ?>'>
+        if (DEBUG) : echo "<br> $className is exist";
+        endif;
 
-    <!-- OG -->
-    <meta property='og:title' content='<?= $metaTags->title_page ?>'>
-    <meta property='og:description' content='<?= $metaTags->description ?>'>
-    <meta property='og:site_name' content='<?= $metaTags->project_name ?>'>
-    <meta property='og:type' content='<?= $metaTags->domain_source ?>'>
-    <meta property='og:image' content='<?= $metaTags->thumbnail ?>'>
-    <meta property='og:image:type' content='image/jpeg'>
-    <meta property='og:image:width' content='300'>
-    <meta property='og:image:height' content='300'>
-    <meta property='og:url' content='<?= $metaTags->domain_source ?>'>
+    else :
+        $message = "Sorry, the ({$className}) requested module is not defined or does not exist. Please check the module name and try again";
+        RecordLoader::log($meesga, 404, 'skldenrq3m4');
+        // RecordLoader::log($message, 404, "nrmpmqAUhTyrYj");
+        error_log("Class file not found: $className");
 
-    <!-- Other Optional Meta Tags -->
-    <meta name='application-name' content='<?= $metaTags->project_name ?>'>
-    <title><?= $metaTags->title_page ?></title>
+        if (DEBUG) echo "Class file not found: $className";
 
-    <link rel='apple-touch-icon' sizes='180x180' href='/public/assets/favicon/apple-touch-icon.png'>
-    <link rel='icon' type='image/png' sizes='32x32' href='/public/assets/favicon/favicon-32x32.png'>
-    <link rel='icon' type='image/png' sizes='16x16' href='/public/assets/favicon/favicon-16x16.png'>
-    <link rel='mask-icon' href='/public/assets/favicon/safari-pinned-tab.svg' color='#5bbad5'>
-    <meta name='msapplication-TileColor' content='#2b5797'>
-    <meta name='theme-color' content='#ffffff'>
-    <meta name='theme-color' content='#000000'>
-    <meta name='apple-mobile-web-app-capable' content='yes'>
-    <meta name='apple-mobile-web-app-status-bar-style' content='black'>
-    <link rel='alternate' type='application/rss+xml' title='RSS Feed' href='URL to your RSS feed'>
+        exit;
+    endif;
+});
 
-    <!-- Thumbnail -->
-    <link rel='shortcut icon' href='/public/assets/placeholder.webp'>
-    <meta name='msapplication-TileImage' content='/public/assets/placeholder.webp'>
+// Implement request rate limiting logic
+$isSpam = Security::isSpam();
 
-    <?= $core->head; ?>
+// Check if the request is not spam or in DEBUGMODE
+if (!$isSpam || DEBUGMODE) :
+    // if (!$isSpam) :
+    $router = new Web;
+else :
+    // Log or handle the spam attempt (e.g., block the IP)
+    $error_code = 500;
+    $error_title = 'Blocked IP';
+    http_response_code($error_code);
+    require_once __DIR__ . '/modules/core/views/errors/bad-request.html';;
 
-</head>
+    // Check and unblock IPs after 30 minutes
+    Security::unblockOldAttempts();
+endif;
 
-<body>
-    <div id="app">
-        <?= $core->output ?>
-    </div>
+if (DEBUG) echo "loaded Autoload";
 
-    <?= $core->endbody; ?>
-</body>
-
-</html>
-
-<?php
-
-if (PRODUCTION) (new TrafficLoader)->set($start_time);
 session_write_close();
+die;

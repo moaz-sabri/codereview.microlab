@@ -1,240 +1,236 @@
-// Get the value of 'token' and display it
-const token = getCookie("token");
+class Requests {
+  constructor() {
+    // Get the value of 'token' and display it
+    this.token = this.getCookie("WEx4UpU6AOzw8z");
 
-// Access the cookie in JavaScript
-function getCookie(name) {
-  const cookies = document.cookie.split(";");
-  for (let i = 0; i < cookies.length; i++) {
-    const cookie = cookies[i].trim();
-    if (cookie.startsWith(name + "=")) {
-      return cookie.substring(name.length + 1);
+    this.thisForm,
+      this.loadingSubmitButton,
+      this.errorMessage,
+      this.loadingSpiner,
+      this.loading;
+
+    this.headers = {
+      // "Content-Type": "application/json",
+    };
+  }
+
+  // Access the cookie in JavaScript
+  getCookie(name) {
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.startsWith(name + "=")) {
+        return cookie.substring(name.length + 1);
+      }
     }
+    return null;
   }
-  return null;
-}
 
-/****************************************
- *            Part Start                *
- *            Mailbox               *
- ****************************************/
-function updateMailStatus(id) {
-  fetch(endpoint + "api/mailbox/" + id, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.resource) {
-        window.location.href = data.resource;
-      } else {
-        // TODO update mail status
+  subjoud(event, owner = undefined) {
+    return new Promise((resolve, reject) => {
+      event.preventDefault();
+
+      const form = event.target;
+      form.classList.add("was-validated");
+
+      this.thisForm = event.srcElement;
+
+      this.submitProcess();
+
+      if (!form.checkValidity()) {
+        event.stopPropagation();
+        reject("the form is not complated!");
+        return;
       }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
+
+      if (owner != undefined) {
+        this.headers["Authorization"] = this.token;
+      }
+
+      let action = this.thisForm.getAttribute("action");
+      let method = this.thisForm.getAttribute("method");
+
+      if (!action) {
+        reject("The form action property is not set!");
+      }
+
+      let formData = new FormData(this.thisForm);
+
+      // TODO PUT Hendler
+      // // Convert form data to JSON
+      // var jsonData = {};
+      // formData.forEach(function (value, key) {
+      //   // jsonData[key] = value;
+      // });
+      // body: JSON.stringify(jsonData),
+      // headers: {
+      // "Content-Type": "application/json",
+      // },
+
+      fetch(action, {
+        method: method,
+        headers: this.headers,
+        body: formData,
+      })
+        .then((response) => {
+          if (response.ok && response.status == 200) {
+            return response.json();
+          } else {
+            reject(`${response.status} ${response.statusText} ${response.url}`);
+          }
+        })
+        .then((data) => {
+          resolve(data);
+        })
+        .catch((error) => {
+          reject(error.message);
+        });
     });
-}
-
-function submitContact() {
-  const form = document.getElementById("submitContact");
-
-  if (form.checkValidity() === false) {
-    form.classList.add("was-validated");
-    return;
   }
 
-  const formData = new FormData(form);
+  getRequest(action, data = undefined) {
+    return new Promise((resolve, reject) => {
+      if (!action) {
+        reject("The form action property is not set!");
+      }
 
-  fetch(endpoint + "api/mailbox/create", {
-    method: "POST",
-    body: formData,
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((error) => {
-      console.error("Error:", error);
+      if (data) {
+        action = action + "?data=" + btoa(data);
+      }
+
+      fetch(action, {
+        method: "GET",
+        headers: this.headers,
+      })
+        .then((response) => {
+          if (response.ok && response.status == 200) {
+            return response.json();
+          } else {
+            reject(`${response.status} ${response.statusText} ${response.url}`);
+          }
+        })
+        .then((data) => {
+          resolve(data);
+        })
+        .catch((error) => {
+          reject(error);
+        });
     });
-}
+  }
 
-function submitContactForm(e) {
-  subjoud(e)
-    .then((data) => {
-      console.log(data);
-      alert("thinks for Conects!");
-      window.location.reload();
-    })
-    .catch((error) => {
-      console.log(error);
-      console.error("Error:", error);
-      submitError(error);
+  putRequest(action, data = undefined) {
+    return new Promise((resolve, reject) => {
+      if (!action) {
+        reject("The form action property is not set!");
+      }
+
+      if (data) {
+        action = action + "?data=" + btoa(data);
+      }
+
+      fetch(action, {
+        method: "PUT",
+        headers: this.headers,
+      })
+        .then((response) => {
+          if (response.ok && response.status == 200) {
+            return response.json();
+          } else {
+            reject(`${response.status} ${response.statusText} ${response.url}`);
+          }
+        })
+        .then((data) => {
+          resolve(data);
+        })
+        .catch((error) => {
+          reject(error);
+        });
     });
-}
+  }
 
-/****************************************
- *            Part Start                *
- *           Notification               *
- ****************************************/
-function updateNotificationStatus(id) {
-  fetch(endpoint + "api/notification/update/" + id, {
-    method: "POST",
-    headers: {
-      Authorization: token,
-      "Content-Type": "application/json",
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      console.log(data);
-      if (data.resource) {
-        window.location.href = data.resource;
-      } else {
-        let number = document.getElementById("numberOfNotifications");
-        number.innerText = Number(number.innerText) - 1;
-        if (number.innerText == 0) {
-          number.style.display = "none";
+  deleteRequest(action, owner = undefined) {
+    return new Promise((resolve, reject) => {
+      if (!action) {
+        reject("The form action property is not set!");
+      }
+
+      if (owner != undefined) {
+        this.headers["Authorization"] = owner;
+      }
+
+      fetch(action, {
+        method: "DELETE",
+        headers: this.headers,
+      })
+        .then((response) => {
+          if (response.ok && response.status == 200) {
+            return response.json();
+          } else {
+            reject(`${response.status} ${response.statusText} ${response.url}`);
+          }
+        })
+        .then((data) => {
+          resolve(data);
+
+          // if (data.status === 200) {
+          //   resolve(data);
+          // } else {
+          //   reject(data.message);
+          // }
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
+
+  submitProcess() {
+    if (!this.thisForm) return;
+    this.loadingSubmitButton = this.thisForm.querySelector(
+      'button[type="submit"]'
+    );
+    this.errorMessage = this.thisForm.querySelector(".error-message");
+    this.loadingSpiner = this.thisForm.querySelector(".loading");
+
+    this.loadingSpiner.classList.add("d-block");
+    this.errorMessage.classList.remove("d-block");
+    this.errorMessage.innerHTML = "";
+    this.loadingSubmitButton.classList.add("d-none");
+  }
+
+  submitError(error) {
+    if (!this.thisForm) return;
+    this.loadingSpiner.classList.remove("d-block");
+    this.errorMessage.classList.add("d-block");
+    this.errorMessage.innerHTML = error;
+    this.loadingSubmitButton.classList.remove("d-none");
+  }
+
+  submitSucsses(message) {
+    if (!this.thisForm) return;
+    this.loadingSpiner.classList.remove("d-block");
+    this.errorMessage.classList.remove("d-block");
+    this.errorMessage.innerHTML = "";
+    this.loadingSubmitButton.classList.remove("d-none");
+    this.thisForm.reset();
+    this.thisForm.classList.remove("was-validated");
+  }
+
+  defaultPostSubmitRequest(e) {
+    this.subjoud(e, true)
+      .then((data) => {
+        this.submitSucsses();
+        if (data.callback) {
+          window.location.href = data.callback;
+        } else {
+          window.location.reload();
         }
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-    });
-}
-
-// Policy Alert
-function allowCookies() {
-  let cookieConsent = document.getElementById("cookie-consent");
-  fetch(endpoint + "api/savepolicydata", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
-    .then((response) => {
-      if (response.status == 200) {
-        localStorage.setItem("cookieConsent", "true");
-        cookieConsent.style.display = "none";
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-    });
-}
-
-function cancelCookies() {
-  let cookieConsent = document.getElementById("cookie-consent");
-  localStorage.setItem("cookieConsent", "false");
-  cookieConsent.style.display = "none";
-}
-
-function runPolicyAlert() {
-  const cookieConsent = document.getElementById("cookie-consent");
-
-  // Check if user has previously accepted cookies
-  if (!localStorage.getItem("cookieConsent")) {
-    cookieConsent.style.display = "block";
+      })
+      .catch((error) => {
+        console.error(error);
+        this.submitError(error);
+      });
   }
 }
 
-/****************************************
- *               Login                  *
- ****************************************/
-function submitToLogin(e) {
-  subjoud(e, token)
-    .then((data) => {
-      localStorage.getItem("key", data);
-      window.location.href = "/profile";
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      submitError(error);
-    });
-}
-
-function submitToForgotPassword(event) {
-  event.preventDefault();
-  subjoud(event)
-    .then((data) => {
-      if (data.status === 200) {
-        alert(
-          "Password Reset Request: An email with instructions to reset your password has been sent to your registered email address. Please check your inbox and follow the provided link to reset your password. If you don't receive the email, please check your spam folder."
-        );
-
-        console.log(data);
-        // window.location.href = "/reset/password/" + data.message;
-      } else {
-        alert("try again!");
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-    });
-}
-
-function submitToResetPassword(event) {
-  subjoud(event)
-    .then((data) => {
-      if (data.status === 200) {
-        alert(
-          "Password Reset Request: An email with instructions to reset your password has been sent to your registered email address. Please check your inbox and follow the provided link to reset your password. If you don't receive the email, please check your spam folder."
-        );
-
-        window.location.href = "/login";
-      } else {
-        alert("try again!");
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-    });
-}
-
-/****************************************
- *               Order                  *
- ****************************************/
-function submitCreateOrder(event) {
-  subjoud(event)
-    .then((data) => {
-      console.log(data);
-      event.srcElement.reset();
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-    });
-
-  alert("Sorry this option is not ready yat!");
-}
-
-/****************************************
- *               Project                  *
- ****************************************/
-function submitProject(e) {
-  saveContent();
-
-  subjoud(e, token)
-    .then((data) => {
-      console.log(data);
-      window.location.href = "javascript:history.go(-1)";
-    })
-    .catch((error) => {
-      console.log(error);
-      console.error("Error:", error);
-      submitError(error);
-    });
-}
-
-function submitTypeProject(e) {
-  subjoud(e, token)
-    .then((data) => {
-      console.log(data);
-      // window.location.href = "javascript:history.go(-1)";
-    })
-    .catch((error) => {
-      console.log(error);
-      console.error("Error:", error);
-      submitError(error);
-    });
-}
+export default Requests;
